@@ -1,0 +1,175 @@
+---
+title: "plot_SNP"
+author: "Paulyna Magana"
+date: '`r format(Sys.time(), "Last modified: %d %b %Y")`'
+output:
+  rmarkdown::html_document:
+    toc: true
+    toc_float:
+      collapsed: false
+
+knit: (function(input_file, encoding) { output_dir = "..";
+  rmarkdown::render(input_file,
+ encoding=encoding,
+ output_file=file.path(dirname(input_file), output_dir, 'plot_SNP.html'))})
+---
+
+```{r setup, include=FALSE, message=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Dependencies
+
+```{r load, message=FALSE}
+#this code visualise data from Uniprot
+# using data from Q13402
+
+# download the protein data first...
+
+library(drawProteins)
+library(ggplot2)
+```
+
+# Mine data from Uniprot
+
+```{r uniprot, message=FALSE}
+#ADD PROTEIN ACESS UNIPROT
+protein <- "Q9H015"
+
+# pulling down data
+prot_data <- drawProteins::get_features(protein)
+# produce data frame
+prot_data <- drawProteins::feature_to_dataframe(prot_data)
+
+#rename features
+prot_data["featuresTemp.2", "description"] <- "Transmembrane"
+prot_data["featuresTemp.4", "description"] <- "Transmembrane"
+prot_data["featuresTemp.6", "description"] <- "Transmembrane"
+prot_data["featuresTemp.8", "description"] <- "Transmembrane"
+prot_data["featuresTemp.10", "description"] <- "Transmembrane"
+prot_data["featuresTemp.12", "description"] <- "Transmembrane"
+prot_data["featuresTemp.14", "description"] <- "Transmembrane"
+prot_data["featuresTemp.16", "description"] <- "Transmembrane"
+prot_data["featuresTemp.18", "description"] <- "Transmembrane"
+prot_data["featuresTemp.20", "description"] <- "Transmembrane"
+prot_data["featuresTemp.22", "description"] <- "Transmembrane"
+prot_data["featuresTemp.24", "description"] <- "Transmembrane"
+```
+
+# Draw protein
+
+## Protein schematic
+
+```{r schematic, message=FALSE}
+# make protein schematic
+p <- draw_canvas(prot_data)
+p <- draw_chains(p, prot_data,label_chains = FALSE)
+p <- draw_domains(p, prot_data, label_domains = FALSE, show.legend = TRUE, type = "TRANSMEM")
+p <- draw_phospho(p, prot_data)
+p
+```
+
+## Theme
+
+```{r schematic2, message=FALSE}
+# nice domain structure
+# note that it is a long protein > 2000 amino acids. 
+
+p <- p + theme_bw(base_size = 14) + # white background
+  theme(panel.grid.minor=element_blank(), 
+        panel.grid.major=element_blank()) +
+  theme(axis.ticks = element_blank(), 
+        axis.text.y = element_blank()) +
+  theme(panel.border = element_blank())
+p
+```
+
+```{r variants1, message=FALSE}
+# EXPLORE VARIANTS
+# many VARIANTS
+# count them...
+nrow(prot_data[prot_data$type == "VARIANT",])
+# ans = 74
+
+# these can be plotted using geom_point() function
+p + geom_point(data = prot_data[prot_data$type == "VARIANT",],
+               aes(x = begin,
+                   y = order+0.25))
+```
+
+Wanted focus on disease variants and colour the by disease, so need to change the info...colour or shape by info within it...
+
+```{r variants2, message=FALSE}
+# duplicate prot_data
+prot_data2 <- prot_data
+# duplicate description..
+prot_data2$disc2 <- prot_data$description
+# remove word "in"
+prot_data2$disc2 <- gsub("in ", "", prot_data2$disc2)
+
+# pull out the disease name...
+library(stringr)
+
+temptable <- str_split_fixed(prot_data2$disc2, ";|:", 2)
+prot_data2 <- cbind(prot_data2, temptable)
+
+# name columns
+tempnames <- colnames(prot_data2)
+tempnames[11] <- "disease"
+colnames(prot_data2) <- tempnames
+
+# add colour argument within aesthetics
+p + geom_point(data = prot_data2[prot_data2$type == "VARIANT",],
+               aes(x = begin,
+                   y = order+0.25,
+                   colour = disease))
+```
+
+Exclude some of the VARIANTS as not disease causing.. dbSNPs, rare polymorphism and the blank one 
+
+```{r variants3, message=FALSE}
+
+prot_data2$disease[prot_data2$disease=="dbSNP"] <- NA
+prot_data2$disease[prot_data2$disease==""] <- NA
+prot_data2$disease[prot_data2$disease=="rare polymorphism"] <- NA
+
+# clean up variant list for easier legend
+disease_var_data <- prot_data2[prot_data2$type == "VARIANT",]
+disease_var_data <- na.omit(disease_var_data)
+disease_var_data$disease <- gsub("found patients with ", 
+                                 "", disease_var_data$disease)
+disease_var_data$disease <- gsub("found a patient with ", 
+                                 "", disease_var_data$disease)
+
+
+
+# over plotting is a problem 
+# enlarge canvas and explore geom_jitter()
+p <- p + ylim(0.75, 3)
+p <- p + geom_jitter(data = disease_var_data,
+                     aes(x = begin,
+                         y = 2,
+                         colour = disease),
+                     width = 0, height = 0.75, 
+                     size = 2) +
+geom_point(data = prot_data2[prot_data2$type =="CARBOHYD",],
+             aes(x = begin,
+                 y = order+0.2),
+             size= 3, shape = 17)
+```
+
+# Add titles
+
+```{r, message=FALSE}
+# add titles and subtitles
+p <- p + labs(title = prot_data2$description[1],
+              subtitle = "source: Uniprot accessed 29 May 2021")
+p
+
+```
+
+# Session Info
+
+```{r, message=FALSE}
+sessionInfo()
+```

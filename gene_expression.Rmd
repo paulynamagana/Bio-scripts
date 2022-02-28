@@ -1,0 +1,66 @@
+---
+title: "gene_expression"
+author: "Paulyna Magana"
+date: '`r format(Sys.time(), "Last modified: %d %b %Y")`'
+output:
+  rmarkdown::html_document:
+    toc: true
+    toc_float:
+      collapsed: false
+
+knit: (function(input_file, encoding) { output_dir = "..";
+  rmarkdown::render(input_file,
+ encoding=encoding,
+ output_file=file.path(dirname(input_file), output_dir, 'gene_expression.html'))})
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Gene Expression
+
+## Dependencies
+```{r, message=FALSE}
+library(ggplot2)
+library(readr)
+library(devtools)
+library(rmarkdown)
+```
+
+
+## Import data
+
+```{r, message=FALSE}
+Transporters <-read_csv("data/ExpressionRMA.csv")
+paged_table(Transporters)
+```
+
+
+# Create plor
+
+```{r, message=FALSE}
+gtrans <- ggplot(Transporters, aes(Transporter, Tissue, fill= Average_RMA)) + 
+  geom_tile() +
+  scale_fill_gradient(low="white", high="black") +
+  theme(strip.placement = "outside",
+        plot.title = element_text(hjust = 0.5)) +
+  ggtitle(label = "SLC22 Abundance expression in human") +
+  scale_y_discrete(limits = rev(levels(as.factor(Transporters$Tissue)))) +
+  theme_classic()
+print(gtrans)
+```
+
+# Improve plot
+
+```{r, message=FALSE}
+#display axis names and rotate x label to a 90 angle
+gtrans+labs(x ="Transporter", y = "Tissue/Cell Line") + theme(axis.text.x = element_text(angle=90))
+```
+
+
+# Session info
+```{r}
+session_info()
+```
+

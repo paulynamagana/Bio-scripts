@@ -1,0 +1,125 @@
+---
+title: "NTAlignment"
+author: "Paulyna Magana"
+date: '`r format(Sys.time(), "Last modified: %d %b %Y")`'
+output:
+  rmarkdown::html_document:
+    toc: true
+    toc_float:
+      collapsed: false
+
+knit: (function(input_file, encoding) { output_dir = "..";
+  rmarkdown::render(input_file,
+ encoding=encoding,
+ output_file=file.path(dirname(input_file), output_dir, 'nt_alignment.html'))})
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Dependencies
+
+```{r libraries, message=FALSE}
+library(msa)
+library(tinytex)
+library(dplyr)
+library(ggmsa)
+library(Biostrings)
+```
+
+# Load sequence file
+
+```{r load, message=FALSE}
+#--- NT load file fasta with sequences NO ALIGNMENT
+myseq <- "./data/TransportersmRNA.fa"
+sequences <- readDNAStringSet(myseq)
+```
+
+# Align with ClustalW with default parameters
+
+```{r align, message=FALSE}
+myFirstAlignment <- msa(sequences)
+```
+
+# Show alignment
+
+```{r show, message=FALSE}
+#show alignment
+print(myFirstAlignment, show = "complete")
+```
+
+## Save file
+
+```{r save, message=FALSE}
+## save alignment as fasta file
+msaPrettyPrint(myFirstAlignment, alFile="./data/ntSLC22alignment.fasta", output="asis", showNames="none",
+               showLogo="none", askForOverwrite=FALSE, verbose=FALSE)
+
+```
+
+## load again
+
+```{r, message=FALSE}
+#load alignment file cos has to have same length
+nt_sequence<- "./data/ntSLC22alignment.fasta"
+ma<- Biostrings::readDNAMultipleAlignment(nt_sequence)
+```
+
+# Plot ggmsa plot
+
+```{r, fig.height=13, fig.width=8, message=FALSE}
+#change start and end for desired part of the sequence
+#changing field will change the length for each chunk
+ggmsa(ma, start = 1900, end = 2067, char_width = 0.7, font = NULL, color="Chemistry_NT", seq_name = TRUE) + facet_msa(field = 50)
+```
+
+# Plot heatmap style
+
+```{r,fig.height=13, fig.width=8, message=FALSE}
+#mention reference sequence for plot
+rownames(ma)
+aln = readDNAMultipleAlignment(nt_sequence)
+aln = unmasked(aln)
+
+#decide the reference sequence
+names(aln)[1]
+ref = aln[1]
+
+#make the binary for where the sequences are the same as the reference
+bm = sapply(1:length(aln),function(i){
+  as.numeric(as.matrix(aln[i])==as.matrix(ref))
+})
+
+bm = t(bm)
+rownames(bm) = names(aln)
+
+#plot heatmap
+library(pheatmap)
+#change  ranges 
+pheatmap(bm[nrow(bm):1,1:770],cluster_rows=FALSE,cluster_cols=FALSE)
+```
+
+
+# Plot bar style
+
+```{r,  fig.height=13, fig.width=8, message=FALSE}
+library(seqvisr)
+
+#load MSA file
+inpmsa <- "./data/ntSLC22alignment.fasta"
+
+#create plot
+#mention the reference sequence
+msavisr(nt_sequence, "SLC22A1", refontop = TRUE, cbfcols = TRUE, basecolors = c("gray", "black", "white"))
+
+```
+
+
+
+# Session Info
+```{r}
+sessionInfo()
+```
+
+
