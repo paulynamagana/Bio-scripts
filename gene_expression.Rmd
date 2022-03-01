@@ -1,17 +1,24 @@
 ---
-title: "gene_expression"
+title: "Alignment AA"
 author: "Paulyna Magana"
-date: '`r format(Sys.time(), "Last modified: %d %b %Y")`'
 output:
-  rmarkdown::html_document:
+  pdf_document:
     toc: true
-    toc_float:
-      collapsed: false
+    toc_depth: 2
+    number_sections: true
+    fig_width: 6
+    fig_height: 4
+    fig_caption: true
+header-includes:
+- \usepackage{gb4e}
+- \noautomath
 
-knit: (function(input_file, encoding) { output_dir = "..";
+always_allow_html: true
+
+knit: (function(input_file, encoding) { output_dir = "./PDFs_outcome";
   rmarkdown::render(input_file,
  encoding=encoding,
- output_file=file.path(dirname(input_file), output_dir, 'gene_expression.html'))})
+ output_file=file.path(dirname(input_file), output_dir, 'Gene_expression_Atlas.pdf'))})
 ---
 
 ```{r setup, include=FALSE}
@@ -37,9 +44,9 @@ paged_table(Transporters)
 ```
 
 
-# Create plor
+# Create plot
 
-```{r, message=FALSE}
+```{r, fig.width=8, fig.height=12, message=FALSE}
 gtrans <- ggplot(Transporters, aes(Transporter, Tissue, fill= Average_RMA)) + 
   geom_tile() +
   scale_fill_gradient(low="white", high="black") +
@@ -48,19 +55,20 @@ gtrans <- ggplot(Transporters, aes(Transporter, Tissue, fill= Average_RMA)) +
   ggtitle(label = "SLC22 Abundance expression in human") +
   scale_y_discrete(limits = rev(levels(as.factor(Transporters$Tissue)))) +
   theme_classic()
+#print
 print(gtrans)
 ```
 
 # Improve plot
 
-```{r, message=FALSE}
+```{r, fig.width=8, fig.height=10, message=FALSE}
 #display axis names and rotate x label to a 90 angle
-gtrans+labs(x ="Transporter", y = "Tissue/Cell Line") + theme(axis.text.x = element_text(angle=90))
+gtrans+labs(x ="Transporter", y = "Tissue/Cell Line") + theme(axis.text.x = element_text(angle=90)) 
 ```
 
 
 # Session info
-```{r}
+```{r session_info, comment=NA}
 session_info()
 ```
 

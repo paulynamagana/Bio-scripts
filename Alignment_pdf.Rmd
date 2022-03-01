@@ -1,0 +1,181 @@
+---
+title: "Alignment AA"
+author: "Paulyna Magana"
+output:
+  pdf_document:
+    toc: true
+    toc_depth: 2
+    number_sections: true
+    fig_width: 6
+    fig_height: 4
+    fig_caption: true
+header-includes:
+- \usepackage{gb4e}
+- \noautomath
+
+always_allow_html: true
+
+knit: (function(input_file, encoding) { output_dir = "./PDFs_outcome";
+  rmarkdown::render(input_file,
+ encoding=encoding,
+ output_file=file.path(dirname(input_file), output_dir, 'Alignment_AA.pdf'))})
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Dependencies
+
+```{r libraries , message=FALSE, warning=FALSE}
+library(msa)
+library(dplyr)
+#plot alignment with ggmsa
+library(ggmsa)
+library(Biostrings)
+```
+
+# Load files
+
+```{r align, message=FALSE}
+#AA load file fasta with sequences NO ALIGNMENT
+myseq <- "./data/TransportersAA.fasta"
+sequences <- readAAStringSet(myseq)
+```
+
+How many sequences do we have?
+
+```{r align exploration, message=FALSE, comment=NA}
+length(sequences)
+```
+
+
+# Align
+
+```{r clustalw, message=FALSE}
+#uses default settings with the ClustalW algorithm
+myAln <- msa(sequences)
+```
+
+
+```{r show results, message=FALSE, comment=NA}
+#show alignment
+print(myAln, show = "complete")
+```
+
+# Save alignment
+
+```{r save, message=FALSE, warning=FALSE}
+## save alignment as fasta file
+msaPrettyPrint(myAln, alFile="./data/SLC22AAalignmentR.fasta", output="asis", showNames="none", showLogo="none", askForOverwrite=FALSE, verbose=FALSE)
+```
+
+# Load alignment
+
+```{r, message=FALSE}
+#load alignment file
+aa_sequence <- "./data/SLC22AAalignmentR.fasta"
+
+#read file
+ma<- Biostrings::readAAMultipleAlignment(aa_sequence)
+```
+
+# Plot as gmsa
+
+```{r, fig.height=14, fig.width=10, message=FALSE}
+#change start and end for desired part of the sequence
+#changing field will change the length for each chunk
+ggmsa(ma, start = 1, end = 200, char_width = 0.7, font = NULL, color="Chemistry_NT", seq_name = TRUE) + facet_msa(field = 50)
+```
+
+
+```{r, fig.height=13, fig.width=10, message=FALSE}
+#change start and end for desired part of the sequence
+#changing field will change the length for each chunk
+ggmsa(ma, start = 201, end = 400, char_width = 0.7, font = NULL, color="Chemistry_NT", seq_name = TRUE) + facet_msa(field = 50)
+```
+
+
+```{r, fig.height=13, fig.width=10, message=FALSE}
+#change start and end for desired part of the sequence
+#changing field will change the length for each chunk
+ggmsa(ma, start = 401, end = 600, char_width = 0.7, font = NULL, color="Chemistry_NT", seq_name = TRUE) + facet_msa(field = 50)
+```
+
+
+```{r, fig.height=13, fig.width=10, message=FALSE}
+#change start and end for desired part of the sequence
+#changing field will change the length for each chunk
+ggmsa(ma, start = 600, end = 800, char_width = 0.7, font = NULL, color="Chemistry_NT", seq_name = TRUE) + facet_msa(field = 50)
+```
+
+
+
+# Plot heatmap style
+```{r, message=FALSE}
+#mention reference sequence to plot
+rownames(ma)
+aln = readAAMultipleAlignment(aa_sequence)
+aln = unmasked(aln)
+#decide the reference sequence
+names(aln)[1]
+ref = aln[1]
+
+#make the binary for where the sequences are the same as the reference
+bm = sapply(1:length(aln),function(i){
+  as.numeric(as.matrix(aln[i])==as.matrix(ref))
+})
+
+bm = t(bm)
+rownames(bm) = names(aln)
+```
+
+Plotting
+
+```{r, fig.height=8, fig.width=6, message=FALSE}
+#plot heatmap
+library(pheatmap)
+#change  ranges 
+pheatmap(bm[nrow(bm):1,1:760],cluster_rows=FALSE,cluster_cols=FALSE)
+```
+
+# Bar style
+```{r, fig.height=8, fig.width=6, message=FALSE, warning=FALSE}
+# Plot bar style
+library(seqvisr)
+
+#load MSA file
+inpmsa <- "./data/SLC22AAalignmentR.fasta"
+
+#create plot
+#mention the reference sequence
+msavisr(inpmsa, "SLC22A1", refontop = TRUE, cbfcols = TRUE, basecolors = c("gray", "black", "white"))
+```
+
+```{r, fig.width=8, fig.height=12, warning=FALSE}
+library(seqinr)
+### Turn your alignment into a tree
+# convert the alignment for the seqinr package
+myAln2 <- msaConvert(myAln, type="seqinr::alignment")
+# this object is a list object with 4 elements
+
+# generate a distance matrix using seqinr package
+d <-dist.alignment(myAln2, matrix = c("identity", "similarity"))
+# have a look at the output
+as.matrix(d)
+
+# generate the tree with the ape package
+# the nj() function allows neighbor-joining tree estimation
+library(ape)
+myTree <- nj(d)
+
+# plot the tree
+plot(myTree, main="Phylogenetic Tree of SLC22 Sequences")
+```
+
+
+# Session Info
+```{r, comment=NA}
+sessionInfo()
+```
+
