@@ -43,6 +43,9 @@ Transporters <-read_csv("data/ExpressionRMA.csv")
 paged_table(Transporters)
 ```
 
+```{r}
+```
+
 
 # Create plot
 
@@ -54,6 +57,7 @@ gtrans <- ggplot(Transporters, aes(Transporter, Tissue, fill= Average_RMA)) +
         plot.title = element_text(hjust = 0.5)) +
   ggtitle(label = "SLC22 Abundance expression in human") +
   scale_y_discrete(limits = rev(levels(as.factor(Transporters$Tissue)))) +
+  scale_x_discrete(limits = levels(as.factor(Transporters$Transporter))) +
   theme_classic()
 #print
 print(gtrans)
@@ -63,7 +67,9 @@ print(gtrans)
 
 ```{r, fig.width=8, fig.height=10, message=FALSE}
 #display axis names and rotate x label to a 90 angle
-gtrans+labs(x ="Transporter", y = "Tissue/Cell Line") + theme(axis.text.x = element_text(angle=90)) 
+gtrans + labs(x ="Transporter", y = "Tissue/Cell Line") +
+  scale_x_discrete(limits = c("SLC22A1", "SLC22A2", "SLC22A3", "SLC22A4", "SLC22A5", "SLC22A6", "SLC22A7", "SLC22A8", "SLC22A9", "SLC22A10", "SLC22A11", "SLC22A12", "SLC22A13", "SLC22A14", "SLC22A17", "SLC22A18"))+
+  theme(axis.text.x = element_text(angle=90)) 
 ```
 
 
