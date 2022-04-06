@@ -159,6 +159,54 @@ rownames(SLC22A6) <- NULL
 
 
 
+###############SLC22A7
+## Import data
+SLC22A7url <- "https://www.proteinatlas.org/ENSG00000137204.json"
+SLC22A7_json <- jsonlite::fromJSON(SLC22A7url, "text")
+
+## Arrange data
+SLC22A7RAW <- SLC22A7_json[82:136]
+SLC22A7RAW <- as.data.frame(SLC22A7RAW)
+rownames(SLC22A7RAW) <- "nTPM"
+
+## Separate the cell lines from string
+colnames(SLC22A7RAW) <- gsub("Tissue.RNA...", "", names(SLC22A7RAW), fixed = TRUE)
+colnames(SLC22A7RAW) <- gsub("..nTPM.", "", names(SLC22A7RAW), fixed = TRUE)
+colnames(SLC22A7RAW) <- gsub(".", " ", names(SLC22A7RAW), fixed = TRUE)
+
+#AS DATAFRAME
+SLC22A7 <- as.data.frame(t(SLC22A7RAW))
+SLC22A7$tissue <- rownames(SLC22A7)
+SLC22A7 <-transform(SLC22A7, nTPM=as.numeric(nTPM))
+SLC22A7$transporter <- "SLC22A7"
+rownames(SLC22A7) <- NULL
+
+
+
+
+###############SLC22A8
+## Import data
+SLC22A7url <- "https://www.proteinatlas.org/ENSG00000137204.json"
+SLC22A7_json <- jsonlite::fromJSON(SLC22A7url, "text")
+
+## Arrange data
+SLC22A7RAW <- SLC22A7_json[82:136]
+SLC22A7RAW <- as.data.frame(SLC22A7RAW)
+rownames(SLC22A7RAW) <- "nTPM"
+
+## Separate the cell lines from string
+colnames(SLC22A7RAW) <- gsub("Tissue.RNA...", "", names(SLC22A7RAW), fixed = TRUE)
+colnames(SLC22A7RAW) <- gsub("..nTPM.", "", names(SLC22A7RAW), fixed = TRUE)
+colnames(SLC22A7RAW) <- gsub(".", " ", names(SLC22A7RAW), fixed = TRUE)
+
+#AS DATAFRAME
+SLC22A7 <- as.data.frame(t(SLC22A7RAW))
+SLC22A7$tissue <- rownames(SLC22A7)
+SLC22A7 <-transform(SLC22A7, nTPM=as.numeric(nTPM))
+SLC22A7$transporter <- "SLC22A7"
+rownames(SLC22A7) <- NULL
+
+
 
 
 
@@ -169,35 +217,49 @@ rownames(SLC22A6) <- NULL
 
 ###############paste all
 #paste
-transporters <- rbind(SLC22A1, SLC22A4, SLC22A5, SLC22A2, SLC22A3)
-
+transporters <- rbind(SLC22A1, SLC22A4, SLC22A5, SLC22A2, SLC22A3, SLC22A7, SLC22A6)
 transporters$log10nTPM <- log10(transporters$nTPM+1)
 
 write.csv(transporters, file = "./data/transportershumantlas.csv")
 
 
 
+################# octs / OCTNS
+library(dplyr)
+target <- c("SLC22A1", "SLC22A4", "SLC22A5", "SLC22A2", "SLC22A3")
+OCTS <- transporters %>%
+  filter(transporter %in% target)
+
+target_tissue <- c("adipose tissue", "bone marrow", "colon", "breast", "cerebral cortex", "esophagus",
+            "heart muscle", "kidney", "liver", "lung", "ovary", "pancreas", "prostate",
+            "small intestine", "urinary bladder", "vagina", "white matter")
+OCT_tissue <- OCTS %>%
+  filter(tissue %in% target_tissue)
+
 
 #plot
-ggplot(transporters, aes(x=tissue, y=log10nTPM, fill=transporter))+
+ggplot(OCT_tissue, aes(x=tissue, y=log10nTPM, fill=transporter))+
   geom_bar(stat="identity", position="dodge") +  
   theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
         panel.background = element_blank(), axis.line = element_line(colour = "black"), axis.text.x = element_text(angle=90)) 
 
 
-pdf(file = "./PDFs_outcome/expression_proteinatlas.pdf",   # The directory you want to save the file in
+pdf(file = "./PDFs_outcome/expression_proteinatlasOCTNS.pdf",   # The directory you want to save the file in
     width = 8, # The width of the plot in inches
     height = 12) 
 
-p <- ggplot(transporters, aes(y=tissue, x=transporter, fill=log10nTPM)) +
+
+
+p <- ggplot(OCT_tissue, aes(y=tissue, x=transporter, fill=log10nTPM)) +
   geom_tile() +
-  scale_fill_gradient(low="white", high="black") +
+  scale_fill_gradient(low="pink", high="darkblue") +
   theme(strip.placement = "outside",
         plot.title = element_text(hjust = 0.5)) +
   ggtitle(label = "SLC22 Abundance expression in human") +
-  scale_y_discrete(limits = rev(levels(as.factor(transporters$tissue)))) +
+  scale_y_discrete(limits = rev(levels(as.factor(OCT_tissue$tissue)))) +
   labs(fill='log TPM')  +
   theme_classic()
+
 p
 
 dev.off()
